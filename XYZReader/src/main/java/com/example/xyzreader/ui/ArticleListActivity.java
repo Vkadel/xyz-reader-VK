@@ -26,6 +26,8 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -120,12 +122,11 @@ public class ArticleListActivity extends AppCompatActivity {
                 }
             }
         });
-
         setSupportActionBar(mToolbar);
         final View toolbarContainerView = findViewById(R.id.toolbar_layout);
 
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
-
+        mSwipeRefreshLayout.setRefreshing(true);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -137,7 +138,7 @@ public class ArticleListActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             FragmentManager fm = getFragmentManager();
             fragment = new ArticleListFragment();
-            //MAke Fragment retainable
+            //Make Fragment retainable
             fragment.setRetainInstance(true);
             FragmentTransaction fragmentTransaction = fm.beginTransaction();
             fragmentTransaction.add(R.id.container2, fragment, MY_FIRST_FRAGMENT);
@@ -145,8 +146,10 @@ public class ArticleListActivity extends AppCompatActivity {
             mViewModel.getArticles().observe(this, new Observer<List<Article>>() {
                 @Override
                 public void onChanged(@Nullable List<Article> articles) {
+                    mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
                     //Checking if the change in the data was triggered due to swipe
                     //and turn it off, and removed all padding that was added
+
                     if(mSwipeRefreshLayout.isRefreshing()){
                         mSwipeRefreshLayout.setRefreshing(false);
                         LinearLayout linearLayout=findViewById(R.id.LL_for_rv);
@@ -155,22 +158,26 @@ public class ArticleListActivity extends AppCompatActivity {
                                 0,0);
                     }
                     myListofArticles = articles;
-                    RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
                     adapter = new myArticleAdapter(articles);
-                    if (!isRestarted && !itGotDataOnce) {
-                        UpdateUI(articles, recyclerView);
+                    if (!itGotDataOnce) {
+                        UpdateUI(articles, mRecyclerView);
                         itGotDataOnce = true;
                     }
                 }
             });
+
         } else {
             fragment = (ArticleListFragment) getFragmentManager().findFragmentByTag(MY_FIRST_FRAGMENT);
             mRecyclerView = fragment.mRecyclerView;
             adapter = fragment.GetTheGoodies();
+            mRecyclerView.setAdapter(adapter);
             myListofArticles = fragment.getSecondGoodie();
-            isRestarted = true;
+            adapter.mArticles=myListofArticles;
+            UpdateUI(myListofArticles,mRecyclerView);
         }
+
     }
+
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -191,27 +198,49 @@ public class ArticleListActivity extends AppCompatActivity {
     }
 
     private void UpdateUI(List<Article> articles, RecyclerView recyclerView) {
-        if (!itGotDataOnce) {
             recyclerView.setAdapter(adapter);
-            fragment.SetTheGoodies(adapter, articles);
-
+            this.fragment.SetTheGoodies(adapter, articles);
             int columnCount = getResources().getInteger(R.integer.list_column_count);
             StaggeredGridLayoutManager sglm =
                     new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
             recyclerView.setLayoutManager(sglm);
-        }
+            setAnimation(recyclerView);
+        runLayoutAnimation(recyclerView);
     }
+    private void setAnimation(RecyclerView recyclerView) {
+        int resId = R.anim.layout_animation_grow;
+        LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(recyclerView.getContext(), resId);
+        recyclerView.setLayoutAnimation(animation);
+    }
+    private void runLayoutAnimation(final RecyclerView recyclerView) {
+        final Context context = recyclerView.getContext();
+        final LayoutAnimationController controller =
+                AnimationUtils.loadLayoutAnimation(context, R.anim.layout_animation_grow);
+        if (controller.getAnimation().getDuration()==(long)getResources().getInteger(R.integer.anim_duration_long)){
+            long animationDuration=(long)getResources().getInteger(R.integer.anim_duration_medium);
+            controller.getAnimation().setDuration(animationDuration);
+            Log.e(TAG, "runLayoutAnimation: not the first time"+ controller.getAnimation().getDuration() );
+        }
+        if(!itGotDataOnce){
+            long animationDuration=(long)getResources().getInteger(R.integer.anim_duration_long);
+            controller.getAnimation().setDuration(animationDuration);
+            Log.e(TAG, "runLayoutAnimation: FIRST"+ controller.getAnimation().getDuration() );
+        }
 
+        recyclerView.setLayoutAnimation(controller);
+        recyclerView.getAdapter().notifyDataSetChanged();
+        recyclerView.scheduleLayoutAnimation();
+    }
     private void refresh() {
         //TODO:Initiate refresh for View model with drag down
         LinearLayout linearLayout=findViewById(R.id.LL_for_rv);
         float i=getResources().getDimension(R.dimen.refresh_padding);
         linearLayout.setPadding(0,(int)i,
                 0,0);
+        itGotDataOnce=false;
         ViewModel mViewModel=ViewModelProviders.of(this).get(ArticleListViewModel.class);
        ((ArticleListViewModel) mViewModel).loadArticlesOnline();
 
-       //Add gap on top so the circular view can be seen
 
     }
     public float convertPixelsToDp(float px, Context context){

@@ -61,4 +61,5 @@ public class ArticleListFragment extends Fragment {
     public List<Article> getSecondGoodie(){
         return mArticles;
     }
+
 }

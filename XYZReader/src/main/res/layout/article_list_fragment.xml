@@ -16,6 +16,7 @@
         android:paddingLeft="@dimen/list_side_margin"
         android:paddingRight="@dimen/list_side_margin"
         android:paddingBottom="28dp"
+        android:layoutAnimation="@anim/layout_animation_grow"
         />
 </android.support.constraint.ConstraintLayout>
 
