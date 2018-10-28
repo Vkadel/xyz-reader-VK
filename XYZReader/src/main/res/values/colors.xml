@@ -16,11 +16,12 @@
 -->
 
 <resources>
+    <color name="dark_gray">#595959</color>
     <color name="photo_placeholder">#ccc</color>
     <color name="theme_primary">#ba68c8</color>
-    <color name="theme_primary_dark">#aa00ff</color>
+    <color name="theme_primary_dark">#ba68c8</color>
     <color name="theme_accent">#ef6c00</color>
-    <color name="lightColor">#92e9a943</color>
-    <color name="theme_highlight">#FFFF00</color>
+    <color name="lightColor">#6ce98b43</color>
+    <color name="theme_highlight">#7bffff00</color>
     <color name="primary_material_light">#00bcd4</color>
 </resources>

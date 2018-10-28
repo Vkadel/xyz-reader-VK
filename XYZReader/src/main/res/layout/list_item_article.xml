@@ -17,13 +17,15 @@
 
         <!--suppress AndroidLintContentDescription -->
         <ImageView
-            android:scaleType="centerCrop"
+            android:src="@drawable/logo"
             android:id="@+id/thumbnail"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:background="@color/photo_placeholder" />
+            android:layout_height="@dimen/thumbnailH"
+            android:background="@color/photo_placeholder"
+            android:scaleType="centerCrop" />
 
         <TextView
+            android:text="Tittle"
             android:elevation="13dp"
             android:id="@+id/article_title"
             style="@style/TextAppearance.AppCompat.Subhead"
@@ -33,11 +35,12 @@
             android:paddingTop="16dp"
             android:paddingRight="16dp"
             android:paddingBottom="4dp"
-            android:textColor="@color/lightColor"
+            android:textColor="@color/theme_accent"
             android:ellipsize="end"
             android:maxLines="4" />
 
         <TextView
+            android:text="Subtitle"
             android:id="@+id/article_subtitle"
             style="@style/TextAppearance.AppCompat.Body1"
             android:layout_width="match_parent"
@@ -45,7 +48,7 @@
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
             android:paddingBottom="16dp"
-            android:textColor="#6000"
+            android:textColor="@color/dark_gray"
             android:maxLines="2"
             android:ellipsize="end" />
     </LinearLayout>

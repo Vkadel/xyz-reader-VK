@@ -11,5 +11,8 @@
     <string name="hi">Hi!</string>
     <string name="hello">Hello</string>
     <string name="nothing" />
+    <string name="drag_to_update">Drag down to update articles</string>
+    <string name="articles_loading">Articles Loading....</string>
+    <string name="articles">Articles</string>
 
 </resources>

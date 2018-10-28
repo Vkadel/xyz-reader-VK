@@ -11,16 +11,17 @@
         android:id="@+id/LL_for_rv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:baselineAligned="true"
         android:elevation="0dp"
-        android:orientation="horizontal"
-        android:paddingTop="@dimen/gap_on_top_of_recycler">
+        android:orientation="vertical"
+        android:paddingTop="@dimen/refresh_padding">
 
         <android.support.v4.widget.SwipeRefreshLayout
             android:id="@+id/swipe_refresh_layout"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="10"
             android:elevation="11dp">
 
             <FrameLayout
@@ -43,9 +44,7 @@
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/app_bar_height"
-        android:fitsSystemWindows="true"
-        >
-
+        android:fitsSystemWindows="true">
         <android.support.design.widget.CollapsingToolbarLayout
             android:id="@+id/toolbar_layout"
             android:layout_width="match_parent"

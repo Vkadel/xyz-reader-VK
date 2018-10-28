@@ -3,21 +3,39 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    >
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/articles_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/list_side_margin"
+        android:layout_marginEnd="@dimen/list_side_margin"
+        android:text="@string/articles_loading"
+        android:textColor="@android:color/background_light"
+        android:textSize="@dimen/recycler_title_text_size"
+        android:textStyle="italic"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.024"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <android.support.v7.widget.RecyclerView
-        android:background="@color/lightColor"
         android:id="@+id/recycler_view"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:clipToPadding="false"
+        android:layoutAnimation="@anim/layout_animation_grow"
         android:nestedScrollingEnabled="true"
         android:paddingLeft="@dimen/list_side_margin"
         android:paddingRight="@dimen/list_side_margin"
         android:paddingBottom="28dp"
-        android:layoutAnimation="@anim/layout_animation_grow"
-        />
+        app:layoutManager="android.support.v7.widget.StaggeredGridLayoutManager"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/articles_tv"
+        tools:listitem="@layout/list_item_article" />
 </android.support.constraint.ConstraintLayout>
 
 

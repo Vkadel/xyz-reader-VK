@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.example.xyzreader.R;
 import com.example.xyzreader.room.Article;
@@ -22,6 +23,7 @@ public class ArticleListFragment extends Fragment {
     private List<Article> myListofArticles=null;
     private LiveData<List<Article>> myListofArticlesLive;
     public RecyclerView mRecyclerView;
+    public TextView myTitle;
     private ViewGroup viewGroup;
     private  ArticleListActivity.myArticleAdapter mAdapter;
     private List<Article> mArticles;
@@ -38,6 +40,7 @@ public class ArticleListFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view=inflater.inflate(R.layout.article_list_fragment, container, false);
         mRecyclerView =view.findViewById(R.id.recycler_view);
+        myTitle=view.findViewById(R.id.articles_tv);
         return view;
     }
 

@@ -99,6 +99,7 @@ public class ArticleRepository {
                     thisArticle.setAspect_ratio(object.getString("aspect_ratio"));
                     thisArticle.setPublished_date(object.getString("published_date"));
                     thisArticle.setThumb(object.getString("thumb"));
+                    thisArticle.setTitle(object.getString("title"));
                     mAsyncTaskDao.insertOne(thisArticle);
                     Log.i("Updating_online", "doInBackground: "+i);
                 }

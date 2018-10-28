@@ -12,14 +12,14 @@ public class Article {
     String author;
     @ColumnInfo(name = "body")
     String body;
-    @ColumnInfo(name = "thumb")
-    String thumb;
     @ColumnInfo(name = "aspect_ratio")
     String aspect_ratio;
     @ColumnInfo(name = "photo")
     String photo;
     @ColumnInfo(name = "published_date")
     String published_date;
+    @ColumnInfo(name = "thumb")
+    String thumb;
     @ColumnInfo(name = "title")
     String title;
 

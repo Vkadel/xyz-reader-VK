@@ -5,7 +5,6 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
@@ -33,7 +32,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.xyzreader.R;
-import com.example.xyzreader.data.ItemsContract;
 import com.example.xyzreader.room.Article;
 import com.example.xyzreader.ui.articlelist.ArticleListFragment;
 import com.example.xyzreader.ui.articlelist.ArticleListViewModel;
@@ -68,6 +66,7 @@ public class ArticleListActivity extends AppCompatActivity {
     private Boolean itGotDataOnce = false;
     ArticleListFragment fragment;
     myArticleAdapter adapter;
+    ArticleListViewModel mViewModel;
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
     // Use default locale format
@@ -79,7 +78,9 @@ public class ArticleListActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (isRestarted) {
+        if (itGotDataOnce) {
+            itGotDataOnce=false;
+            isRestarted=true;
             myListofArticles = fragment.getSecondGoodie();
             mRecyclerView = findViewById(R.id.recycler_view);
             UpdateUI(myListofArticles, mRecyclerView);
@@ -91,30 +92,27 @@ public class ArticleListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.article_list_activity);
-        final ArticleListViewModel mViewModel = ViewModelProviders.of(this).get(ArticleListViewModel.class);
+        mViewModel = ViewModelProviders.of(this).get(ArticleListViewModel.class);
         context = getBaseContext();
-
         Timber.plant(new Timber.DebugTree());
-
         final Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         final ImageView imageView = (ImageView) findViewById(R.id.top_bar_logo);
-
+        final TextView ArticleLoadingTV = findViewById(R.id.articles_tv);
+        ArticleLoadingTV.setText(R.string.articles);
         final AppBarLayout appBarLayout = (AppBarLayout) findViewById(R.id.app_bar);
         Log.e(TAG, "onCreate: " + mToolbar.getId());
         mToolbar.setTitleTextColor(getResources().getColor(R.color.theme_primary_dark));
         setSupportActionBar(mToolbar);
         setAppBarNonVisible();
-        getSupportActionBar().setTitle("Hi!");
 
         appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
             @Override
             public void onOffsetChanged(AppBarLayout appBarLayout, int i) {
                 setSupportActionBar(mToolbar);
-                if (i>=-(mToolbar.getMeasuredHeight()+5)) {
+                if (i >= -(mToolbar.getMeasuredHeight() + 5)) {
                     imageView.setVisibility(View.VISIBLE);
                     setAppBarNonVisible();
-                }
-               else{
+                } else {
                     appBarLayout.setBackgroundColor(getResources().getColor(R.color.lightColor));
                     setAppBarVisible();
                     imageView.setVisibility(View.GONE);
@@ -124,7 +122,6 @@ public class ArticleListActivity extends AppCompatActivity {
         });
         setSupportActionBar(mToolbar);
         final View toolbarContainerView = findViewById(R.id.toolbar_layout);
-
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_layout);
         mSwipeRefreshLayout.setRefreshing(true);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -134,14 +131,13 @@ public class ArticleListActivity extends AppCompatActivity {
                 refresh();
             }
         });
-
+        FragmentManager fm = getFragmentManager();
         if (savedInstanceState == null) {
-            FragmentManager fm = getFragmentManager();
             fragment = new ArticleListFragment();
             //Make Fragment retainable
             fragment.setRetainInstance(true);
             FragmentTransaction fragmentTransaction = fm.beginTransaction();
-            fragmentTransaction.add(R.id.container2, fragment, MY_FIRST_FRAGMENT);
+            fragmentTransaction.replace(R.id.container2, fragment, MY_FIRST_FRAGMENT);
             fragmentTransaction.commit();
             mViewModel.getArticles().observe(this, new Observer<List<Article>>() {
                 @Override
@@ -149,13 +145,12 @@ public class ArticleListActivity extends AppCompatActivity {
                     mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
                     //Checking if the change in the data was triggered due to swipe
                     //and turn it off, and removed all padding that was added
-
-                    if(mSwipeRefreshLayout.isRefreshing()){
+                    if (mSwipeRefreshLayout.isRefreshing()) {
                         mSwipeRefreshLayout.setRefreshing(false);
-                        LinearLayout linearLayout=findViewById(R.id.LL_for_rv);
-                        float i=getResources().getDimension(R.dimen.gap_on_top_of_recycler);
-                        linearLayout.setPadding(0,(int)i,
-                                0,0);
+                        LinearLayout linearLayout = findViewById(R.id.LL_for_rv);
+                        float i = getResources().getDimension(R.dimen.gap_on_top_of_recycler);
+                        linearLayout.setPadding(0, (int) i,
+                                0, 0);
                     }
                     myListofArticles = articles;
                     adapter = new myArticleAdapter(articles);
@@ -167,13 +162,19 @@ public class ArticleListActivity extends AppCompatActivity {
             });
 
         } else {
+            //Reload initial fragment as well as all information in it
             fragment = (ArticleListFragment) getFragmentManager().findFragmentByTag(MY_FIRST_FRAGMENT);
             mRecyclerView = fragment.mRecyclerView;
             adapter = fragment.GetTheGoodies();
             mRecyclerView.setAdapter(adapter);
             myListofArticles = fragment.getSecondGoodie();
-            adapter.mArticles=myListofArticles;
+            adapter.mArticles = myListofArticles;
+            TextView ArticleTV = fragment.myTitle;
+            itGotDataOnce=true;
             UpdateUI(myListofArticles,mRecyclerView);
+            //Turn off Loading if comes in after recreation
+            mSwipeRefreshLayout.setRefreshing(false);
+
         }
 
     }
@@ -198,73 +199,80 @@ public class ArticleListActivity extends AppCompatActivity {
     }
 
     private void UpdateUI(List<Article> articles, RecyclerView recyclerView) {
+        if (!itGotDataOnce){
+            fragment.myTitle.setText("");
             recyclerView.setAdapter(adapter);
             this.fragment.SetTheGoodies(adapter, articles);
             int columnCount = getResources().getInteger(R.integer.list_column_count);
             StaggeredGridLayoutManager sglm =
                     new StaggeredGridLayoutManager(columnCount, StaggeredGridLayoutManager.VERTICAL);
             recyclerView.setLayoutManager(sglm);
-            setAnimation(recyclerView);
-        runLayoutAnimation(recyclerView);
+        setAnimation(recyclerView);
+        runLayoutAnimation(recyclerView);}
     }
+
     private void setAnimation(RecyclerView recyclerView) {
         int resId = R.anim.layout_animation_grow;
         LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(recyclerView.getContext(), resId);
         recyclerView.setLayoutAnimation(animation);
     }
+
     private void runLayoutAnimation(final RecyclerView recyclerView) {
         final Context context = recyclerView.getContext();
         final LayoutAnimationController controller =
                 AnimationUtils.loadLayoutAnimation(context, R.anim.layout_animation_grow);
-        if (controller.getAnimation().getDuration()==(long)getResources().getInteger(R.integer.anim_duration_long)){
-            long animationDuration=(long)getResources().getInteger(R.integer.anim_duration_medium);
+
+        if (!itGotDataOnce) {
+            long animationDuration = (long) getResources().getInteger(R.integer.anim_duration_long);
             controller.getAnimation().setDuration(animationDuration);
-            Log.e(TAG, "runLayoutAnimation: not the first time"+ controller.getAnimation().getDuration() );
-        }
-        if(!itGotDataOnce){
-            long animationDuration=(long)getResources().getInteger(R.integer.anim_duration_long);
-            controller.getAnimation().setDuration(animationDuration);
-            Log.e(TAG, "runLayoutAnimation: FIRST"+ controller.getAnimation().getDuration() );
+            Log.e(TAG, "runLayoutAnimation: FIRST" + controller.getAnimation().getDuration());
         }
 
         recyclerView.setLayoutAnimation(controller);
         recyclerView.getAdapter().notifyDataSetChanged();
         recyclerView.scheduleLayoutAnimation();
     }
+
     private void refresh() {
         //TODO:Initiate refresh for View model with drag down
-        LinearLayout linearLayout=findViewById(R.id.LL_for_rv);
-        float i=getResources().getDimension(R.dimen.refresh_padding);
-        linearLayout.setPadding(0,(int)i,
-                0,0);
-        itGotDataOnce=false;
-        ViewModel mViewModel=ViewModelProviders.of(this).get(ArticleListViewModel.class);
-       ((ArticleListViewModel) mViewModel).loadArticlesOnline();
-
-
+        LinearLayout linearLayout = findViewById(R.id.LL_for_rv);
+        float i = getResources().getDimension(R.dimen.refresh_padding);
+        linearLayout.setPadding(0, (int) i,
+                0, 0);
+        itGotDataOnce = false;
+        mViewModel = ViewModelProviders.of(this).get(ArticleListViewModel.class);
+        ((ArticleListViewModel) mViewModel).loadArticlesOnline();
+        if (isRestarted){
+            mSwipeRefreshLayout.setRefreshing(false);
+            UpdateUI(myListofArticles,mRecyclerView);}
     }
-    public float convertPixelsToDp(float px, Context context){
-        return px / ((float) context.getResources().getDisplayMetrics().densityDpi /DisplayMetrics.DENSITY_DEFAULT);
+
+    public float convertPixelsToDp(float px, Context context) {
+        return px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
     }
-    public float convertDpToPixel(float dp, Context context){
+
+    public float convertDpToPixel(float dp, Context context) {
         Resources resources = context.getResources();
         DisplayMetrics metrics = resources.getDisplayMetrics();
-        float px = dp * ((float)metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+        float px = dp * ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
         return px;
     }
-    private void setAppBarVisible(){
+
+    private void setAppBarVisible() {
         getSupportActionBar().show();
-        CollapsingToolbarLayout collapsingToolbarLayout=(CollapsingToolbarLayout)findViewById(R.id.toolbar_layout);
+        CollapsingToolbarLayout collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
         collapsingToolbarLayout.setTitle(getResources().getString(R.string.app_name));
         collapsingToolbarLayout.setCollapsedTitleTextColor(getResources().getColor(R.color.theme_accent));
     }
-    private void setAppBarNonVisible(){
-        Toolbar mToolbar=(Toolbar)findViewById(R.id.toolbar);
+
+    private void setAppBarNonVisible() {
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
         getSupportActionBar().hide();
-        CollapsingToolbarLayout collapsingToolbarLayout=(CollapsingToolbarLayout)findViewById(R.id.toolbar_layout);
+        CollapsingToolbarLayout collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.toolbar_layout);
         collapsingToolbarLayout.setTitle(getResources().getString(R.string.nothing));
     }
+
     public class myArticleAdapter extends RecyclerView.Adapter<ViewHolder> {
         private List<Article> mArticles;
 
@@ -284,8 +292,11 @@ public class ArticleListActivity extends AppCompatActivity {
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(new Intent(Intent.ACTION_VIEW,
-                            ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+                    int itemindex=vh.getAdapterPosition();
+                    Context context = view.getContext();
+                    Intent intent = new Intent(context, ArticleDetailActivity.class);
+                    intent.putExtra(ArticleDetailFragment.ARG_ITEM_ID, itemindex);
+                    context.startActivity(intent);
                 }
             });
             return vh;
@@ -323,6 +334,7 @@ public class ArticleListActivity extends AppCompatActivity {
                                 + thisArticle.getAuthor()));
             }
             Picasso.get().load(thisArticle.getThumb()).into(holder.thumbnailView);
+            Log.e(TAG, "onBindViewHolder: "+holder.thumbnailView.getImageTintMode());
             //holder.thumbnailView.setAspectRatio(Float.parseFloat(thisArticle.getAspect_ratio()));
         }
 
@@ -344,4 +356,4 @@ public class ArticleListActivity extends AppCompatActivity {
             subtitleView = (TextView) view.findViewById(R.id.article_subtitle);
         }
     }
-    }
+}
