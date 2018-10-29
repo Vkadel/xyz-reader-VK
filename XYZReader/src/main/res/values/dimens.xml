@@ -4,13 +4,17 @@
     <dimen name="detail_body_text_size">22sp</dimen>
     <item name="detail_body_line_spacing_multiplier" format="float" type="fraction">1.25</item>
     <dimen name="recycler_title_text_size">24sp</dimen>
-    <dimen name="fab_elevation">2dp</dimen>
+    <dimen name="fab_elevation">8dp</dimen>
     <dimen name="fab_press_translation_z">6dp</dimen>
     <dimen name="fab_margin">24dp</dimen>
     <dimen name="app_bar_height">140dp</dimen>
     <dimen name="gap_on_top_of_recycler">50dp</dimen>
     <dimen name="refresh_padding">100dp</dimen>
     <dimen name="thumbnailH">150dp</dimen>
+    <dimen name="padding_up_button_detail">16dp</dimen>
+    <dimen name="back_but_w">60dp</dimen>
+    <dimen name="app_bar_elevation">4dp</dimen>
+    <dimen name="item_elevation">8dp</dimen>
 
 
 </resources>

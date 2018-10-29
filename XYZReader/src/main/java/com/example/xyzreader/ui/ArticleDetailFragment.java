@@ -4,12 +4,13 @@ import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -18,18 +19,21 @@ import android.support.v7.graphics.Palette;
 import android.text.Html;
 import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.ImageLoader;
 import com.example.xyzreader.R;
 import com.example.xyzreader.room.Article;
 import com.example.xyzreader.ui.articlelist.ArticleListViewModel;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
+import com.squareup.picasso.Transformation;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -70,7 +74,7 @@ public class ArticleDetailFragment extends Fragment{
     private SimpleDateFormat outputFormat = new SimpleDateFormat();
     // Most time functions can only handle 1902 - 2037
     private GregorianCalendar START_OF_EPOCH = new GregorianCalendar(2,1,1);
-
+    Boolean loadedOnce=false;
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -80,7 +84,7 @@ public class ArticleDetailFragment extends Fragment{
 
     public static android.support.v4.app.Fragment newInstance(int itemId) {
         Bundle arguments = new Bundle();
-        arguments.putLong(ARG_ITEM_ID, itemId);
+        arguments.putInt(ARG_ITEM_ID, itemId);
         ArticleDetailFragment fragment = new ArticleDetailFragment();
         fragment.setArguments(arguments);
         return fragment;
@@ -89,7 +93,7 @@ public class ArticleDetailFragment extends Fragment{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        //Added to make animations wait until photo is loaded
         if (getArguments().containsKey(ARG_ITEM_ID)) {
             mItemId = getArguments().getInt(ARG_ITEM_ID);
         }
@@ -107,12 +111,7 @@ public class ArticleDetailFragment extends Fragment{
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
-        // In support library r8, calling initLoader for a fragment in a FragmentPagerAdapter in
-        // the fragment's onCreate may cause the same LoaderManager to be dealt to multiple
-        // fragments because their mIndex is -1 (haven't been added to the activity yet). Thus,
-        // we do this in onActivityCreated.
-        //TODO:Replace with ViewModel
+       final Bundle savedOnceState=savedInstanceState;
         //Defining ViewModel
         mViewModel=ViewModelProviders.of(getActivity()).get(ArticleListViewModel.class);
         //Observing the model
@@ -120,17 +119,22 @@ public class ArticleDetailFragment extends Fragment{
             @Override
             public void onChanged(@Nullable List<Article> articles) {
                 mArticles=articles;
+                mItemId=getArguments().getInt(ARG_ITEM_ID)-1;
                 //TODO Update UI
                 bindViews();
                 updateStatusBar();
+                loadedOnce=true;
+
             }
+
         });
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        mRootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
+        mRootView = inflater.inflate(R.layout.detail_article_fragment, container, false);
         mDrawInsetsFrameLayout = (DrawInsetsFrameLayout)
                 mRootView.findViewById(R.id.draw_insets_frame_layout);
         mDrawInsetsFrameLayout.setOnInsetsCallback(new DrawInsetsFrameLayout.OnInsetsCallback() {
@@ -151,7 +155,7 @@ public class ArticleDetailFragment extends Fragment{
             }
         });
 
-        mPhotoView = (ImageView) mRootView.findViewById(R.id.photo);
+        mPhotoView = (ImageView) mRootView.findViewById(R.id.thumbnail);
         mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
 
         mStatusBarColorDrawable = new ColorDrawable(0);
@@ -215,13 +219,47 @@ public class ArticleDetailFragment extends Fragment{
             return;
         }
 
-        TextView titleView = (TextView) mRootView.findViewById(R.id.article_title);
+        final TextView titleView = (TextView) mRootView.findViewById(R.id.article_title);
         TextView bylineView = (TextView) mRootView.findViewById(R.id.article_byline);
         bylineView.setMovementMethod(new LinkMovementMethod());
         TextView bodyView = (TextView) mRootView.findViewById(R.id.article_body);
+        final ImageView imageView=(ImageView)mRootView.findViewById(R.id.thumbnail);
 
+        final LinearLayout metaBar=(LinearLayout)mRootView.findViewById(R.id.meta_bar);
+        final Target target=new Target() {
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                Palette palette=Palette.from(bitmap).generate();
+                Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
+                Palette.Swatch mMutedSwatch=palette.getDarkMutedSwatch();
+                Palette.Swatch m=palette.getLightMutedSwatch();
+                if (vibrantSwatch == null) {
+                    Log.e(TAG, "onGenerated: "+"Null Tag");
+                    return;
+                }
+                Log.e(TAG, "onGenerated: "+vibrantSwatch.getRgb());
+                if (getActivity()!=null){
+                    if (palette!=null&&imageView!=null){
+                        if (vibrantSwatch!=null){
+                    imageView.setBackgroundColor(vibrantSwatch.getRgb());
+                    metaBar.setBackgroundColor(vibrantSwatch.getRgb());}}}
+                        if (mMutedSwatch!=null){
+                    mRootView.setBackgroundColor(mMutedSwatch.getRgb());}
+                    titleView.setTextColor(m.getRgb());
+                startPostponedEnterTransition();
+            }
 
-        bodyView.setTypeface(Typeface.createFromAsset(getResources().getAssets(), "Rosario-Regular.ttf"));
+            @Override
+            public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+            }
+        };
+        imageView.setTag(target);
 
         if (mArticles != null) {
             mRootView.setAlpha(0);
@@ -248,26 +286,32 @@ public class ArticleDetailFragment extends Fragment{
 
             }
             bodyView.setText(Html.fromHtml(mArticles.get(mItemId).getBody().replaceAll("(\r\n|\n)", "<br />")));
-            ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
-                    .get(mArticles.get(mItemId).getPhoto(), new ImageLoader.ImageListener() {
-                        @Override
-                        public void onResponse(ImageLoader.ImageContainer imageContainer, boolean b) {
-                            Bitmap bitmap = imageContainer.getBitmap();
-                            if (bitmap != null) {
-                                Palette p = Palette.generate(bitmap, 12);
-                                mMutedColor = p.getDarkMutedColor(0xFF333333);
-                                mPhotoView.setImageBitmap(imageContainer.getBitmap());
-                                mRootView.findViewById(R.id.meta_bar)
-                                        .setBackgroundColor(mMutedColor);
-                                updateStatusBar();
-                            }
-                        }
 
-                        @Override
-                        public void onErrorResponse(VolleyError volleyError) {
+            //Picasso get Image
 
-                        }
-                    });
+            DisplayMetrics metrics = new DisplayMetrics();
+            getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            int heightPixels = metrics.heightPixels;
+            int widthPixels = metrics.widthPixels;
+            int densityDpi = metrics.densityDpi;
+            if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                //Switch the ratios for the image if landscape Mode
+                Picasso.get()
+                        .load(mArticles.get(mItemId).getPhoto())
+                        .resize(widthPixels,heightPixels/2)
+                        .centerCrop()
+                        .into(imageView);
+                Picasso.get().load(mArticles.get(mItemId).getPhoto()).into(target);
+            }
+            else{
+                Picasso.get()
+                        .load(mArticles.get(mItemId).getPhoto())
+                        .resize(heightPixels, widthPixels)
+                        .centerCrop()
+                        .into(imageView);
+                Picasso.get().load(mArticles.get(mItemId).getPhoto()).into(target);
+            }
+
         } else {
             mRootView.setVisibility(View.GONE);
             titleView.setText("N/A");
@@ -286,5 +330,25 @@ public class ArticleDetailFragment extends Fragment{
         return mIsCard
                 ? (int) mPhotoContainerView.getTranslationY() + mPhotoView.getHeight() - mScrollY
                 : mPhotoView.getHeight() - mScrollY;
+    }
+    public class CropSquareTransformation implements Transformation {
+
+        @Override public Bitmap transform(Bitmap source) {
+            int size = Math.min(source.getWidth(), source.getHeight());
+            int x = (source.getWidth() - size) /2;
+            int y = (source.getHeight() - size) / 6;
+            Bitmap result = Bitmap.createBitmap(source, x, y, size, size);
+            if (result != source) {
+                source.recycle();
+            }
+            if (source != null) {
+                Palette p = Palette.from(source).generate();
+                mMutedColor = p.getDarkMutedColor(0xFF333333);
+                Log.e(TAG, "transform: "+mMutedColor);
+            }
+            return result;
+        }
+
+        @Override public String key() { return "square()"; }
     }
 }

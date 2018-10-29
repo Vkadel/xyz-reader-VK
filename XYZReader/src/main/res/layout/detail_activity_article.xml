@@ -8,17 +8,19 @@
         android:layout_height="match_parent" />
 
     <FrameLayout
+        android:elevation="@dimen/app_bar_elevation"
+        android:paddingTop="@dimen/padding_up_button_detail"
         android:id="@+id/up_container"
         android:layout_width="match_parent"
-        android:layout_height="?actionBarSize"
-        android:background="@color/lightColor">
+        android:layout_height="?actionBarSize">
 
         <ImageButton
             android:id="@+id/action_up"
-            android:layout_width="56dp"
+            android:layout_width="?actionBarSize"
             android:layout_height="?actionBarSize"
             android:background="?selectableItemBackgroundBorderless"
             android:contentDescription="@string/up"
+            android:elevation="8dp"
             android:src="@drawable/ic_arrow_back"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
     </FrameLayout>

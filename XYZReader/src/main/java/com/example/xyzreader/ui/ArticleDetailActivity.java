@@ -4,6 +4,7 @@ package com.example.xyzreader.ui;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModel;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +36,6 @@ public class ArticleDetailActivity extends AppCompatActivity {
     private int mSelectedItemId;
     private int mSelectedItemUpButtonFloor = Integer.MAX_VALUE;
     private int mTopInset;
-
     private ViewPager mPager;
     private MyPagerAdapter mPagerAdapter;
     private View mUpButtonContainer;
@@ -51,32 +52,59 @@ public class ArticleDetailActivity extends AppCompatActivity {
                     View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
                             View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
         }
-        setContentView(R.layout.activity_article_detail);
+        setContentView(R.layout.detail_activity_article);
+        mPager = (ViewPager) findViewById(R.id.pager);
+        final ViewPager mPagerReference=mPager;
+        final int mSecondStartId=0;
 
         //Defining ViewModel
         mViewModel=ViewModelProviders.of(this).get(ArticleListViewModel.class);
 
-        mPager = (ViewPager) findViewById(R.id.pager);
-
-        //Observing the model
-        ((ArticleListViewModel) mViewModel).getArticles().observe(this, new Observer<List<Article>>() {
-            @Override
-            public void onChanged(@Nullable List<Article> articles) {
-                //TODO Update UI
-                mArticles=articles;
-                //Set Up Adapter After data is provided
-                mPagerAdapter = new MyPagerAdapter(mArticles,getSupportFragmentManager());
-                mPager.setAdapter(mPagerAdapter);
+       //Init sequence
+        if (savedInstanceState == null) {
+            //Observing the model
+            ((ArticleListViewModel) mViewModel).getArticles().observe(this, new Observer<List<Article>>() {
+                @Override
+                public void onChanged(@Nullable List<Article> articles) {
+                    //TODO Update UI
+                    mArticles=articles;
+                    //Set Up Adapter After data is provided
+                    mPagerAdapter = new MyPagerAdapter(mArticles,getSupportFragmentManager());
+                    mPager.setAdapter(mPagerAdapter);
+                    mPager.setCurrentItem(mStartId);
+                }
+            });
+            //Getting the item that was selected
+            if (getIntent() != null && getIntent().hasExtra(ArticleDetailFragment.ARG_ITEM_ID)) {
+                mSelectedItemId=getIntent().getExtras().getInt(ArticleDetailFragment.ARG_ITEM_ID);
+                mStartId=mSelectedItemId;
             }
-        });
+            SetUpPagerListener(mPager);
+        }
+        else {
+            //Re-setting everything up after rotation
+            mArticles=((ArticleListViewModel) mViewModel).getArticles().getValue();
+            mSelectedItemId=savedInstanceState.getInt(ArticleDetailFragment.ARG_ITEM_ID);
+            mPagerAdapter = new MyPagerAdapter(mArticles,getSupportFragmentManager());
+            mPager.setAdapter(mPagerAdapter);
+            mPager.setCurrentItem(mSelectedItemId);
+            SetUpPagerListener(mPager);
+        }
+    }
 
+    public void onUpButtonFloorChanged(long itemId, ArticleDetailFragment fragment) {
+        if (itemId == mSelectedItemId) {
+            mSelectedItemUpButtonFloor = fragment.getUpButtonFloor();
+            updateUpButtonPosition();
+        }
+    }
 
-
-        mPager.setPageMargin((int) TypedValue
+    void SetUpPagerListener(ViewPager mPager){
+        this.mPager.setPageMargin((int) TypedValue
                 .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1, getResources().getDisplayMetrics()));
-        mPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
+        this.mPager.setPageMarginDrawable(new ColorDrawable(0x22000000));
         //Listeners for when the items get changed
-        mPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+        this.mPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageScrollStateChanged(int state) {
                 super.onPageScrollStateChanged(state);
@@ -87,6 +115,7 @@ public class ArticleDetailActivity extends AppCompatActivity {
 
             @Override
             public void onPageSelected(int position) {
+                Log.e("onPageSelected", ""+position);
                 mSelectedItemId = position;
                 updateUpButtonPosition();
             }
@@ -111,24 +140,28 @@ public class ArticleDetailActivity extends AppCompatActivity {
                     mUpButtonContainer.setTranslationY(mTopInset);
                     updateUpButtonPosition();
                     return windowInsets;
+
                 }
             });
         }
-        //Getting the item that was selected
-        if (savedInstanceState == null) {
-            if (getIntent() != null && getIntent().hasExtra(ArticleDetailFragment.ARG_ITEM_ID)) {
-                mStartId = getIntent().getExtras().getInt(ArticleDetailFragment.ARG_ITEM_ID);
-                mSelectedItemId =mStartId;
-            }
 
-        }
     }
 
-    public void onUpButtonFloorChanged(long itemId, ArticleDetailFragment fragment) {
-        if (itemId == mSelectedItemId) {
-            mSelectedItemUpButtonFloor = fragment.getUpButtonFloor();
-            updateUpButtonPosition();
-        }
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt(ArticleDetailFragment.ARG_ITEM_ID,mPager.getCurrentItem());
+        super.onSaveInstanceState(outState);
+
     }
 
     private void updateUpButtonPosition() {
@@ -166,4 +199,5 @@ public class ArticleDetailActivity extends AppCompatActivity {
                     ? mArticles.size() : 0;
         }
     }
+
 }

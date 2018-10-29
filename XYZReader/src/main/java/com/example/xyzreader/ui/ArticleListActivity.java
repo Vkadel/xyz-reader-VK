@@ -1,6 +1,8 @@
 package com.example.xyzreader.ui;
 
 
+import android.app.Activity;
+import android.app.ActivityOptions;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.arch.lifecycle.LiveData;
@@ -67,6 +69,7 @@ public class ArticleListActivity extends AppCompatActivity {
     ArticleListFragment fragment;
     myArticleAdapter adapter;
     ArticleListViewModel mViewModel;
+    Activity activity;
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss");
     // Use default locale format
@@ -104,7 +107,7 @@ public class ArticleListActivity extends AppCompatActivity {
         mToolbar.setTitleTextColor(getResources().getColor(R.color.theme_primary_dark));
         setSupportActionBar(mToolbar);
         setAppBarNonVisible();
-
+        activity=this;
         appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
             @Override
             public void onOffsetChanged(AppBarLayout appBarLayout, int i) {
@@ -289,6 +292,7 @@ public class ArticleListActivity extends AppCompatActivity {
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = getLayoutInflater().inflate(R.layout.list_item_article, parent, false);
             final ViewHolder vh = new ViewHolder(view);
+            final Activity mActivity=activity;
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -296,7 +300,12 @@ public class ArticleListActivity extends AppCompatActivity {
                     Context context = view.getContext();
                     Intent intent = new Intent(context, ArticleDetailActivity.class);
                     intent.putExtra(ArticleDetailFragment.ARG_ITEM_ID, itemindex);
-                    context.startActivity(intent);
+
+                    ImageView sharedView=(ImageView)vh.thumbnailView;
+                    Bundle bundle=ActivityOptions.makeSceneTransitionAnimation
+                            (mActivity,sharedView,"Thumb_to_phot")
+                            .toBundle();
+                    context.startActivity(intent,bundle);
                 }
             });
             return vh;

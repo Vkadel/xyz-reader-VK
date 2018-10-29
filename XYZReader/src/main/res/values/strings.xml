@@ -14,5 +14,6 @@
     <string name="drag_to_update">Drag down to update articles</string>
     <string name="articles_loading">Articles Loading....</string>
     <string name="articles">Articles</string>
+    <string name="from_thumb_to_photo">Thumb_to_photo</string>
 
 </resources>
