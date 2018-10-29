@@ -120,7 +120,7 @@ public class ArticleDetailFragment extends Fragment{
             public void onChanged(@Nullable List<Article> articles) {
                 mArticles=articles;
                 mItemId=getArguments().getInt(ARG_ITEM_ID)-1;
-                //TODO Update UI
+                //Update UI
                 bindViews();
                 updateStatusBar();
                 loadedOnce=true;
@@ -135,8 +135,7 @@ public class ArticleDetailFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         mRootView = inflater.inflate(R.layout.detail_article_fragment, container, false);
-        mDrawInsetsFrameLayout = (DrawInsetsFrameLayout)
-                mRootView.findViewById(R.id.draw_insets_frame_layout);
+        mDrawInsetsFrameLayout = mRootView.findViewById(R.id.draw_insets_frame_layout);
         mDrawInsetsFrameLayout.setOnInsetsCallback(new DrawInsetsFrameLayout.OnInsetsCallback() {
             @Override
             public void onInsetsChanged(Rect insets) {
@@ -144,7 +143,7 @@ public class ArticleDetailFragment extends Fragment{
             }
         });
 
-        mScrollView = (ObservableScrollView) mRootView.findViewById(R.id.scrollview);
+        mScrollView = mRootView.findViewById(R.id.scrollview);
         mScrollView.setCallbacks(new ObservableScrollView.Callbacks() {
             @Override
             public void onScrollChanged() {
@@ -155,7 +154,7 @@ public class ArticleDetailFragment extends Fragment{
             }
         });
 
-        mPhotoView = (ImageView) mRootView.findViewById(R.id.thumbnail);
+        mPhotoView = mRootView.findViewById(R.id.thumbnail);
         mPhotoContainerView = mRootView.findViewById(R.id.photo_container);
 
         mStatusBarColorDrawable = new ColorDrawable(0);
@@ -219,13 +218,13 @@ public class ArticleDetailFragment extends Fragment{
             return;
         }
 
-        final TextView titleView = (TextView) mRootView.findViewById(R.id.article_title);
-        TextView bylineView = (TextView) mRootView.findViewById(R.id.article_byline);
+        final TextView titleView = mRootView.findViewById(R.id.article_title);
+        TextView bylineView = mRootView.findViewById(R.id.article_byline);
         bylineView.setMovementMethod(new LinkMovementMethod());
-        TextView bodyView = (TextView) mRootView.findViewById(R.id.article_body);
-        final ImageView imageView=(ImageView)mRootView.findViewById(R.id.thumbnail);
+        TextView bodyView = mRootView.findViewById(R.id.article_body);
+        final ImageView imageView= mRootView.findViewById(R.id.thumbnail);
 
-        final LinearLayout metaBar=(LinearLayout)mRootView.findViewById(R.id.meta_bar);
+        final LinearLayout metaBar= mRootView.findViewById(R.id.meta_bar);
         final Target target=new Target() {
             @Override
             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
@@ -287,8 +286,7 @@ public class ArticleDetailFragment extends Fragment{
             }
             bodyView.setText(Html.fromHtml(mArticles.get(mItemId).getBody().replaceAll("(\r\n|\n)", "<br />")));
 
-            //Picasso get Image
-
+            //Picasso get Image which is beign downloaded twice to attempt to get the palletes
             DisplayMetrics metrics = new DisplayMetrics();
             getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
             int heightPixels = metrics.heightPixels;
